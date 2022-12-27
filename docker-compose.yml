@@ -1,0 +1,37 @@
+version: '3.6'
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ee:latest'
+    restart: always
+    hostname: 'gitlab.tsqpanel.com'
+    #environment:
+    #  GITLAB_OMNIBUS_CONFIG: |
+    #    external_url 'http://gitlab.tsqpanel.com:8929'
+    #    gitlab_rails['gitlab_shell_ssh_port'] = 2224
+    ports:
+      - '8929:8929'
+      - '2224:22'
+    volumes:
+      - '$GITLAB_HOME/config:/etc/gitlab'
+      - '$GITLAB_HOME/logs:/var/log/gitlab'
+      - '$GITLAB_HOME/data:/var/opt/gitlab'
+    secrets:
+      - gitlab_root_password
+    shm_size: '256m'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: "from_file('/omnibus_config.rb')"
+    configs:
+      - source: gitlab
+        target: /omnibus_config.rb
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:alpine
+    deploy:
+      mode: replicated
+      replicas: 4
+configs:
+  gitlab:
+    file: ./gitlab.rb
+secrets:
+  gitlab_root_password:
+    file: ./root_password.txt
